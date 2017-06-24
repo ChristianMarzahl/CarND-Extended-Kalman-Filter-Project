@@ -8,6 +8,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
+#define EPS 0.0001
+
 /*
  * Constructor.
  */
@@ -85,6 +87,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack
           .raw_measurements_[1], 0, 0;
     }
+
+    if (fabs(ekf_.x_(0)) <=  EPS && fabs(ekf_.x_(1)) < EPS) {
+
+      ekf_.x_(0) = EPS;
+      ekf_.x_(1) = EPS;
+    }
+
     previous_timestamp_ = measurement_pack.timestamp_;
 
     // done initializing, no need to predict or update
@@ -118,7 +127,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       dt_3 /  2.0 * noise_ax, 0, dt_2 * noise_ax, 0,
       0, dt_3 / 2.0 * noise_ay, 0, dt_2 * noise_ay;
 
-  ekf_.Predict();
+  if ( dt > EPS){
+    ekf_.Predict();
+  }
 
   /*****************************************************************************
    *  Update
